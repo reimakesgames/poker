@@ -1,0 +1,19 @@
+{
+	"name": "poker",
+	"version": "1.0.0",
+	"description": "",
+	"main": "server/index.js",
+	"scripts": {},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"devDependencies": {
+		"@types/express": "^4.17.21",
+		"@types/ws": "^8.5.12",
+		"typescript": "^5.5.4"
+	},
+	"dependencies": {
+		"express": "^4.19.2",
+		"ws": "^8.18.0"
+	}
+}
