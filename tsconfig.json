@@ -12,8 +12,8 @@
 		"strict": true,
 		"noUncheckedIndexedAccess": true,
 
-		"moduleResolution": "NodeNext",
-		"module": "NodeNext",
+		"moduleResolution": "Bundler",
+		"module": "ESNext",
 		"lib": ["ES2022", "DOM"]
 		// "outDir": "dist"
 	},
