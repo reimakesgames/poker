@@ -1,6 +1,6 @@
 import express from "express"
-import { Network } from "../shared/Network.js"
 import { WebSocket } from "ws"
+import { Network } from "../shared/Network.js"
 import { SceneTree } from "../shared/SceneTree.js"
 
 let previousTime = Date.now()
@@ -22,7 +22,7 @@ function createLobby(serverId: string) {
 		ws.on("message", (msg: string) => {
 			console.log(msg)
 			let data = JSON.parse(msg)
-			Network.id = serverId
+			Network._serverId = serverId
 			if (data.id === serverId && Network.RemoteEvents[data.target])
 				(
 					Network.RemoteEvents[data.target as string] as Network

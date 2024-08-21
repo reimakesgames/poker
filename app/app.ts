@@ -45,7 +45,7 @@ function connectToLobby(lobbyId: string) {
 		Network._websockets[lobbyId] = {}
 	}
 
-	Network.id = lobbyId
+	Network._serverId = lobbyId
 }
 
 function startGameLoop() {
