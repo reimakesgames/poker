@@ -1,4 +1,4 @@
-import { RemoteEvent } from "../shared/RemoteEvent.js"
+import { Network } from "../shared/Network.js"
 import { SceneTree } from "../shared/SceneTree.js"
 
 const canvasElement = document.getElementById("game") as HTMLCanvasElement
@@ -33,19 +33,19 @@ function connectToLobby(lobbyId: string) {
 			sceneTree.UserId = msg.data
 			return
 		}
-		RemoteEvent._onMessage(msg.data)
+		Network._event(msg.data)
 	}
 
 	ws.onclose = () => {
 		console.log("Connection closed")
 	}
 
-	let server = RemoteEvent._websockets[lobbyId]
+	let server = Network._websockets[lobbyId]
 	if (!server) {
-		RemoteEvent._websockets[lobbyId] = {}
+		Network._websockets[lobbyId] = {}
 	}
 
-	RemoteEvent.id = lobbyId
+	Network.id = lobbyId
 }
 
 function startGameLoop() {

@@ -1,5 +1,5 @@
 import express from "express"
-import { RemoteEvent } from "../shared/RemoteEvent.js"
+import { Network } from "../shared/Network.js"
 import { WebSocket } from "ws"
 import { SceneTree } from "../shared/SceneTree.js"
 
@@ -11,27 +11,6 @@ function createLobby(serverId: string) {
 	const router = express.Router()
 
 	router.ws("/", (ws: WebSocket, req) => {
-		ws.on("message", (msg: string) => {
-			console.log(msg)
-			let data = JSON.parse(msg)
-			RemoteEvent.id = serverId
-			if (data.id === serverId && RemoteEvent.RemoteEvents[data.target])
-				(
-					RemoteEvent.RemoteEvents[
-						data.target as string
-					] as RemoteEvent
-				)._emit(data.data)
-		})
-
-		ws.on("close", () => {
-			console.log("Client disconnected")
-		})
-
-		ws.on("error", (err: Error) => {
-			console.log(err)
-		})
-
-		// create uuid for user
 		let userId = "user"
 		for (let i = 0; i < 28; i++) {
 			userId += Math.floor(Math.random() * 10)
@@ -40,15 +19,37 @@ function createLobby(serverId: string) {
 		}
 		ws.send(userId)
 
+		ws.on("message", (msg: string) => {
+			console.log(msg)
+			let data = JSON.parse(msg)
+			Network.id = serverId
+			if (data.id === serverId && Network.RemoteEvents[data.target])
+				(
+					Network.RemoteEvents[data.target as string] as Network
+				)._emitListeners(data.data)
+		})
+
+		ws.on("close", () => {
+			console.log("Client disconnected")
+
+			let server = Network._websockets[serverId]
+			if (!server) return
+			delete (server as { [key: string]: WebSocket })[userId]
+		})
+
+		ws.on("error", (err: Error) => {
+			console.log(err)
+		})
+
 		console.log("Client connected")
 
-		let server = RemoteEvent._websockets[serverId]
-		if (!server) RemoteEvent._websockets[serverId] = {}
+		let server = Network._websockets[serverId]
+		if (!server) Network._websockets[serverId] = {}
 		let user = (
-			RemoteEvent._websockets[serverId] as { [key: string]: WebSocket }
+			Network._websockets[serverId] as { [key: string]: WebSocket }
 		)[userId] as WebSocket
 		if (!user)
-			(RemoteEvent._websockets[serverId] as { [key: string]: WebSocket })[
+			(Network._websockets[serverId] as { [key: string]: WebSocket })[
 				userId
 			] = ws
 	})
