@@ -1,6 +1,6 @@
 import { Express } from "express"
 import express from "express"
-import { createLobby } from "./game.js"
+import { createLobby } from "./app.js"
 await import("dotenv").then((dotenv) => dotenv.config())
 
 const app = express() as Express & { ws: any }

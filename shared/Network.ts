@@ -9,6 +9,7 @@ class Network {
 	} = {}
 	static RemoteEvents: { [key: string]: Network } = {}
 	static _serverId: string = ""
+	static _userId: string = ""
 
 	constructor() {
 		Network.RemoteEvents[this.constructor.name] = this
@@ -48,6 +49,8 @@ class Network {
 	}
 
 	FireServer(data: any) {
+		// inject the targetUserId into the data
+		data.userId = Network._userId
 		this._fire(Network._serverId, data)
 	}
 

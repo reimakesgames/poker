@@ -1,11 +1,14 @@
 import { Network } from "../shared/Network.js"
+import { Node2D } from "../shared/Node2D.js"
 import { SceneTree } from "../shared/SceneTree.js"
+import { Game } from "./Game.js"
 
 const canvasElement = document.getElementById("game") as HTMLCanvasElement
 const ctx = canvasElement.getContext("2d") as CanvasRenderingContext2D
 let previousTime = Date.now()
 
 const sceneTree = new SceneTree()
+const game = new Game()
 
 function createLobby() {
 	fetch("/api/new_lobby", { method: "POST" })
@@ -24,10 +27,12 @@ function connectToLobby(lobbyId: string) {
 
 		sceneTree.GameId = lobbyId
 		sceneTree._ready()
+		sceneTree.AddChild(game)
 		startGameLoop()
 	}
 
 	ws.onmessage = (msg) => {
+		console.log(msg.data)
 		if (msg.data.startsWith("user")) {
 			console.log(msg.data)
 			sceneTree.UserId = msg.data
@@ -46,6 +51,9 @@ function connectToLobby(lobbyId: string) {
 	}
 
 	Network._serverId = lobbyId
+	Network._userId = sceneTree.UserId
+	ctx.imageSmoothingEnabled = false
+	Node2D._setContext(ctx)
 }
 
 function startGameLoop() {

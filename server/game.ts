@@ -1,73 +1,23 @@
-import express from "express"
-import { WebSocket } from "ws"
 import { Network } from "../shared/Network.js"
-import { SceneTree } from "../shared/SceneTree.js"
+import { Node } from "../shared/Node.js"
+import { Timer } from "../shared/Timer.js"
 
-let previousTime = Date.now()
+class Game extends Node {
+	public DealCards = new Network()
 
-const sceneTree = new SceneTree()
+	public async Ready(): Promise<void> {
+		// the first player to connect is the screen where the game is played
 
-function createLobby(serverId: string) {
-	const router = express.Router()
+		let TurnTimer = new Timer()
+		TurnTimer.OneShot = true
+		this.AddChild(TurnTimer)
 
-	router.ws("/", (ws: WebSocket, req) => {
-		let userId = "user"
-		for (let i = 0; i < 28; i++) {
-			userId += Math.floor(Math.random() * 10)
-				.toString()
-				.substring(0, 1)
+		while (true) {
+			console.log("waow")
+			await TurnTimer.Await(5000)
 		}
-		ws.send(userId)
-
-		ws.on("message", (msg: string) => {
-			console.log(msg)
-			let data = JSON.parse(msg)
-			Network._serverId = serverId
-			if (data.id === serverId && Network.RemoteEvents[data.target])
-				(
-					Network.RemoteEvents[data.target as string] as Network
-				)._emitListeners(data.data)
-		})
-
-		ws.on("close", () => {
-			console.log("Client disconnected")
-
-			let server = Network._websockets[serverId]
-			if (!server) return
-			delete (server as { [key: string]: WebSocket })[userId]
-		})
-
-		ws.on("error", (err: Error) => {
-			console.log(err)
-		})
-
-		console.log("Client connected")
-
-		let server = Network._websockets[serverId]
-		if (!server) Network._websockets[serverId] = {}
-		let user = (
-			Network._websockets[serverId] as { [key: string]: WebSocket }
-		)[userId] as WebSocket
-		if (!user)
-			(Network._websockets[serverId] as { [key: string]: WebSocket })[
-				userId
-			] = ws
-	})
-
-	console.log("Lobby created")
-
-	sceneTree.GameId = serverId
-	sceneTree._ready()
-	startGameLoop()
-
-	return router
+	}
+	public Update(deltaTime: number): void {}
 }
 
-function startGameLoop() {
-	let deltaTime = Date.now() - previousTime
-	sceneTree._update(deltaTime)
-	setTimeout(startGameLoop, 1000 / 10)
-	previousTime = Date.now()
-}
-
-export { createLobby }
+export { Game }
