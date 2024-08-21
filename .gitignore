@@ -1,4 +1,5 @@
 node_modules/
 app/**/*.js
 server/**/*.js
+shared/**/*.js
 .env
