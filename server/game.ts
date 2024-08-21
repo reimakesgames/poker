@@ -1,17 +1,21 @@
 import express from "express"
 import { RemoteEvent } from "../shared/RemoteEvent.js"
 import { WebSocket } from "ws"
+import { SceneTree } from "../shared/SceneTree.js"
 
 let previousTime = Date.now()
 
-function createLobby(id: string) {
+const sceneTree = new SceneTree()
+
+function createLobby(serverId: string) {
 	const router = express.Router()
 
 	router.ws("/", (ws: WebSocket, req) => {
 		ws.on("message", (msg: string) => {
+			console.log(msg)
 			let data = JSON.parse(msg)
-			RemoteEvent.id = id
-			if (data.id === id && RemoteEvent.RemoteEvents[data.target])
+			RemoteEvent.id = serverId
+			if (data.id === serverId && RemoteEvent.RemoteEvents[data.target])
 				(
 					RemoteEvent.RemoteEvents[
 						data.target as string
@@ -27,38 +31,41 @@ function createLobby(id: string) {
 			console.log(err)
 		})
 
+		// create uuid for user
+		let userId = "user"
+		for (let i = 0; i < 28; i++) {
+			userId += Math.floor(Math.random() * 10)
+				.toString()
+				.substring(0, 1)
+		}
+		ws.send(userId)
+
 		console.log("Client connected")
 
-		RemoteEvent._websockets[id] = RemoteEvent._websockets[id] || []
-		RemoteEvent._websockets[id].push(ws)
+		let server = RemoteEvent._websockets[serverId]
+		if (!server) RemoteEvent._websockets[serverId] = {}
+		let user = (
+			RemoteEvent._websockets[serverId] as { [key: string]: WebSocket }
+		)[userId] as WebSocket
+		if (!user)
+			(RemoteEvent._websockets[serverId] as { [key: string]: WebSocket })[
+				userId
+			] = ws
 	})
 
 	console.log("Lobby created")
 
-	setTimeout(() => {
-		Ready()
-		GameLoop()
-	}, 2e3)
+	sceneTree.GameId = serverId
+	sceneTree._initiateReady()
+	startGameLoop()
 
 	return router
 }
 
-function Ready() {
-	console.log("Ready")
-
-	let DealCards = new RemoteEvent()
-
-	DealCards.Connect((data: any) => {
-		console.log(data)
-	})
-}
-
-function Update(deltaTime: number) {}
-
-function GameLoop() {
+function startGameLoop() {
 	let deltaTime = Date.now() - previousTime
-	Update(deltaTime)
-	setTimeout(GameLoop, 1000 / 10)
+	sceneTree._initiateUpdate(deltaTime)
+	setTimeout(startGameLoop, 1000 / 10)
 	previousTime = Date.now()
 }
 

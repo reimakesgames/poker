@@ -4,7 +4,9 @@ type WebSockets = WS | WebSocket | null
 
 class RemoteEvent {
 	_listeners: Function[] = []
-	static _websockets: { [key: string]: WebSockets[] } = {}
+	static _websockets: {
+		[serverId: string]: { [playerId: string]: WebSockets }
+	} = {}
 	static RemoteEvents: { [key: string]: RemoteEvent } = {}
 	static id: string = ""
 
@@ -22,26 +24,43 @@ class RemoteEvent {
 		}
 	}
 
-	_transmit(data: any) {
-		// go through all the websockets and send the data
-		for (let ws of RemoteEvent._websockets[RemoteEvent.id] || []) {
-			if (ws)
-				ws.send(
-					JSON.stringify({
-						target: this.constructor.name,
-						id: RemoteEvent.id,
-						data,
-					})
-				)
-		}
+	_transmit(targetUserId: string, data: any) {
+		let server = RemoteEvent._websockets[RemoteEvent.id]
+		if (!server) return
+		let user = server[targetUserId] as WebSocket
+		if (!user) return
+		user.send(
+			JSON.stringify({
+				target: this.constructor.name,
+				id: RemoteEvent.id,
+				data,
+			})
+		)
+	}
+
+	static _onMessage(msg: string) {
+		let data = JSON.parse(msg)
+		RemoteEvent.id = data.id
+		if (data.id === RemoteEvent.id && RemoteEvent.RemoteEvents[data.target])
+			(
+				RemoteEvent.RemoteEvents[data.target as string] as RemoteEvent
+			)._emit(data.data)
 	}
 
 	MessageServer(data: any) {
-		this._transmit(data)
+		this._transmit(RemoteEvent.id, data)
 	}
 
-	MessageClient(data: any) {
-		this._transmit(data)
+	MessageClient(targetUserId: string, data: any) {
+		this._transmit(targetUserId, data)
+	}
+
+	MessageAllClients(data: any) {
+		let server = RemoteEvent._websockets[RemoteEvent.id]
+		if (!server) return
+		for (let userId in server) {
+			this._transmit(userId, data)
+		}
 	}
 }
 

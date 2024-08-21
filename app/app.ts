@@ -1,20 +1,11 @@
 import { RemoteEvent } from "../shared/RemoteEvent.js"
+import { SceneTree } from "../shared/SceneTree.js"
 
-const game = document.getElementById("game") as HTMLCanvasElement
-const ctx = game.getContext("2d") as CanvasRenderingContext2D
+const canvasElement = document.getElementById("game") as HTMLCanvasElement
+const ctx = canvasElement.getContext("2d") as CanvasRenderingContext2D
 let previousTime = Date.now()
 
-function Ready() {
-	let DealCards = new RemoteEvent()
-
-	DealCards.MessageServer("Hello")
-}
-
-function Update(deltaTime: number) {
-	ctx.clearRect(0, 0, game.width, game.height)
-}
-
-function Draw(deltaTime: number) {}
+const sceneTree = new SceneTree()
 
 function createLobby() {
 	fetch("/api/new_lobby", { method: "POST" })
@@ -29,47 +20,43 @@ function connectToLobby(lobbyId: string) {
 
 	ws.onopen = () => {
 		history.pushState({}, "", `/games/${lobbyId}`)
-		console.log("Connected to server")
+		console.log("Connected to server " + lobbyId)
 
-		Ready()
-		GameLoop()
+		sceneTree.GameId = lobbyId
+		sceneTree._initiateReady()
+		startGameLoop()
 	}
 
 	ws.onmessage = (msg) => {
-		let message = JSON.parse(msg.data) as {
-			id: string
-			target: string
-			data: any
+		if (msg.data.startsWith("user")) {
+			console.log(msg.data)
+			sceneTree.UserId = msg.data
+			return
 		}
-		console.log(message.data)
-		if (message.id === lobbyId && RemoteEvent.RemoteEvents[message.target])
-			(
-				RemoteEvent.RemoteEvents[
-					message.target as string
-				] as RemoteEvent
-			)._emit(message.data)
+		RemoteEvent._onMessage(msg.data)
 	}
 
 	ws.onclose = () => {
 		console.log("Connection closed")
 	}
 
-	RemoteEvent._websockets[lobbyId] = RemoteEvent._websockets[lobbyId] || []
-	RemoteEvent._websockets[lobbyId].push(ws)
+	let server = RemoteEvent._websockets[lobbyId]
+	if (!server) {
+		RemoteEvent._websockets[lobbyId] = {}
+	}
 
 	RemoteEvent.id = lobbyId
 }
 
-function GameLoop() {
+function startGameLoop() {
 	let deltaTime = Date.now() - previousTime
-	Update(deltaTime)
-	Draw(deltaTime)
-	requestAnimationFrame(GameLoop)
+	sceneTree._initiateUpdate(deltaTime)
+	sceneTree._initiateDraw(deltaTime)
+	requestAnimationFrame(startGameLoop)
 	previousTime = Date.now()
 }
 
-let urlParams = new URLSearchParams(window.location.search)
-let lobbyId = urlParams.get("join")
+let lobbyId = new URLSearchParams(window.location.search).get("join")
 if (lobbyId) {
 	connectToLobby(lobbyId)
 } else {
