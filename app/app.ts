@@ -23,7 +23,7 @@ function connectToLobby(lobbyId: string) {
 		console.log("Connected to server " + lobbyId)
 
 		sceneTree.GameId = lobbyId
-		sceneTree._initiateReady()
+		sceneTree._ready()
 		startGameLoop()
 	}
 
@@ -50,8 +50,8 @@ function connectToLobby(lobbyId: string) {
 
 function startGameLoop() {
 	let deltaTime = Date.now() - previousTime
-	sceneTree._initiateUpdate(deltaTime)
-	sceneTree._initiateDraw(deltaTime)
+	sceneTree._update(deltaTime)
+	sceneTree._draw(deltaTime)
 	requestAnimationFrame(startGameLoop)
 	previousTime = Date.now()
 }

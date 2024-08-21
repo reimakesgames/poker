@@ -56,7 +56,7 @@ function createLobby(serverId: string) {
 	console.log("Lobby created")
 
 	sceneTree.GameId = serverId
-	sceneTree._initiateReady()
+	sceneTree._ready()
 	startGameLoop()
 
 	return router
@@ -64,7 +64,7 @@ function createLobby(serverId: string) {
 
 function startGameLoop() {
 	let deltaTime = Date.now() - previousTime
-	sceneTree._initiateUpdate(deltaTime)
+	sceneTree._update(deltaTime)
 	setTimeout(startGameLoop, 1000 / 10)
 	previousTime = Date.now()
 }

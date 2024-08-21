@@ -8,6 +8,12 @@ class Node {
 
 	public Name = "Node"
 
+	AddChild(child: Node): void {
+		child._parent = this
+		this._children.push(child)
+		child._ready()
+	}
+
 	_children: Node[] = []
 	_parent: Node | null = null
 
@@ -15,32 +21,26 @@ class Node {
 		console.log(`${this.Name}: ${message}`)
 	}
 
-	_initiateReady(): void {
+	_ready(): void {
 		this._children.forEach((child) => {
-			child._initiateReady()
+			child._ready()
 		})
 		this._log("Ready")
 		this.Ready()
 	}
 
-	_initiateUpdate(deltaTime: number): void {
+	_update(deltaTime: number): void {
 		this.Update(deltaTime)
 		this._children.forEach((child) => {
-			child._initiateUpdate(deltaTime)
+			child._update(deltaTime)
 		})
 	}
 
-	_initiateDraw(deltaTime: number): void {
+	_draw(deltaTime: number): void {
 		this.Draw(deltaTime)
 		this._children.forEach((child) => {
-			child._initiateDraw(deltaTime)
+			child._draw(deltaTime)
 		})
-	}
-
-	_addChild(child: Node): void {
-		child._parent = this
-		this._children.push(child)
-		this._initiateReady()
 	}
 }
 
